@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: StanisLove
-  description: Install Ruby with jemalocc
+  description: Install Ruby with jemalloc
   license: MIT
   min_ansible_version: 2.5
   platforms:
