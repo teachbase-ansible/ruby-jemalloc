@@ -1,0 +1,46 @@
+- name: Ruby | Checking installed version
+  shell: ruby -v | grep -o "ruby {{ ruby_version }}"
+  register: ruby_installed
+  ignore_errors: yes
+
+  # For ruby version less than 2.6 'LIBS', for 2.6 'MAINLIBS'
+- name: Ruby | Checking configured with jemalloc
+  shell: ((ruby -r rbconfig -e "puts RbConfig::CONFIG['MAINLIBS']");
+          (ruby -r rbconfig -e "puts RbConfig::CONFIG['LIBS']")) | grep -o jemalloc
+  register: ruby_with_jemalloc
+  ignore_errors: yes
+  when: ruby_installed is succeeded
+
+- block:
+  - name: Ruby | Download release
+    unarchive:
+      src: "{{ ruby_url }}"
+      remote_src: yes
+      dest: '/usr/local/src/'
+      mode: "u=rwx,g=rx,o="
+      creates: "{{ ruby_tmp_path }}"
+
+  - name: Ruby | Make, configure, and install ruby.
+    command: "{{ item }}"
+    become: yes
+    args:
+      chdir: "{{ ruby_tmp_path }}"
+      creates: '/usr/local/bin/ruby'
+    with_items:
+      - ./configure --with-jemalloc
+      - make
+      - make install
+
+  - name: Ruby | Ensure temporary path is removed.
+    file:
+      path: "{{ ruby_tmp_path }}"
+      state: absent
+
+  - name: Ruby | Ensure alternatives are updated.
+    alternatives:
+      name: 'ruby'
+      link: '/usr/bin/ruby'
+      path: '/usr/local/bin/ruby'
+
+  when: (ruby_installed is failed) or
+        (ruby_with_jemalloc is failed)

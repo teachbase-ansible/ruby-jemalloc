@@ -1,0 +1,6 @@
+ruby_version: 2.5
+ruby_name: ruby-2.5.3
+ruby_url: "http://cache.ruby-lang.org/pub/ruby/{{ ruby_version }}/{{ ruby_name }}.tar.gz"
+ruby_tmp_path: "/usr/local/src/{{ ruby_name }}"
+jemalloc_version: 5.2.0
+jemalloc_url: "https://github.com/jemalloc/jemalloc/releases/download/{{ jemalloc_version }}/jemalloc-{{ jemalloc_version }}.tar.bz2"

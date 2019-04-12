@@ -1,0 +1,6 @@
+- name: Permissions | Update permissions
+  become: yes
+  file:
+    path: '/usr/local/lib/ruby'
+    owner: "{{ deploy_user }}"
+  when: deploy_user is defined

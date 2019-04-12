@@ -1,0 +1,47 @@
+- name: Jemalloc | Check package installed
+  stat:
+    path: /usr/local/bin/jemalloc-config
+  register: jemalloc_config_bin_file
+
+- name: Jemalloc | Install libjemalloc-dev
+  apt:
+    name: libjemalloc-dev
+    state: present
+  when: not jemalloc_config_bin_file.stat.exists
+
+- name: Jemalloc | Get current version
+  shell: /usr/local/bin/jemalloc-config --version | sed "s/^\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/"
+  register: jemalloc_system_version
+  when: jemalloc_config_bin_file.stat.exists
+
+- name: Jemalloc | Set current version
+  set_fact:
+    current_jemalloc_version: "{{ jemalloc_system_version.stdout }}"
+  when: jemalloc_config_bin_file.stat.exists
+
+- block:
+  - name: Jemalloc | Download release
+    unarchive:
+      src: "{{ jemalloc_url }}"
+      dest: "/tmp"
+      remote_src: yes
+      mode: "u=rwx,g=rx,o="
+      creates: "/tmp/jemalloc-{{ jemalloc_version }}"
+
+  - name: Jemalloc | Configure, make and install
+    command: "{{ item }}"
+    become: yes
+    args:
+      chdir: "/tmp/jemalloc-{{ jemalloc_version }}"
+    with_items:
+      - ./configure
+      - make
+      - make install
+
+  - name: Jemalloc | Remove obsolete files
+    file:
+      path: "/tmp/jemalloc-{{ jemalloc_version }}"
+      state: absent
+
+  when: (not jemalloc_config_bin_file.stat.exists) or
+        (current_jemalloc_version is version(jemalloc_version, '!='))
