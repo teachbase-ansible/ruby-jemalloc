@@ -20,6 +20,11 @@
       mode: "u=rwx,g=rx,o="
       creates: "{{ ruby_tmp_path }}"
 
+  - name: Ruby | Remove prev bin file
+    file:
+      path: '/usr/local/bin/ruby'
+      state: absent
+
   - name: Ruby | Make, configure, and install ruby.
     command: "{{ item }}"
     become: yes
